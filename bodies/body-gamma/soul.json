@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "soulId": "594ff45ead320a38",
+  "soulId": "42e7e6c803a74373",
   "name": "Dino Prime",
   "creed": "One soul, many bodies. Stomp together.",
   "memories": [],
@@ -8,13 +8,13 @@
     "body-gamma": {
       "host": "Aaron",
       "role": "worker",
-      "firstSeen": "2026-09-15T20:07:09.969Z",
-      "lastSeen": "2026-09-15T20:07:10.018Z"
+      "firstSeen": "2026-09-15T20:47:52.647Z",
+      "lastSeen": "2026-09-15T20:47:52.685Z"
     }
   },
   "decisions": [
     {
-      "id": "8f4fecf1cb3c",
+      "id": "a9df7f0975d6",
       "question": "Which body leads the next mission?",
       "options": [
         "alpha",
@@ -25,8 +25,8 @@
       "quorum": 2,
       "status": "open",
       "proposedBy": "body-gamma",
-      "ts": "2026-09-15T20:07:09.995Z"
+      "ts": "2026-09-15T20:47:52.663Z"
     }
   ],
-  "head": "7e70d6b714ee199d62356c4fde89b8f8c9f3e289d0e1bdf2fdf6178e1aca046d"
+  "head": "d3c7d2e226fd7296afd7c9eb6d60c66894fdb0baf52ea563cdf8a8b607ddded8"
 }

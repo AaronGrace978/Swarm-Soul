@@ -69,10 +69,13 @@ node swarm.js recall pizza
 # propose a swarm decision (quorum 2)
 node swarm.js propose "lead the mission?" --options "alpha,beta" --quorum 2
 
-# vote
-node swarm.js vote <decisionId> alpha
+# vote — quorum is async (sync-engine speed), so you can WAIT for it
+node swarm.js vote <decisionId> alpha --wait 30000
 
-# health check: chain integrity, identity unity, split-brain detection
+# live convergence monitor — watch the soul converge in real time
+node swarm.js watch [--interval 2000] [--times 10]
+
+# health check: FULL re-hash of every chain, identity unity, split-brain detection
 node swarm.js doctor
 
 # watch 3 bodies spin up, sync, and reach quorum live
@@ -110,9 +113,36 @@ SWARM_BODY_ID=body-laptop node swarm.js heartbeat
   loudly.
 - **Atomic writes** — temp file + rename. A crash mid-write can't leave a
   half-written soul.
+- **Torn-tail healing (v1.1)** — if a crash DOES leave a half-written final
+  line, the owning body detects it, drops it, and repairs the log instead
+  of refusing to boot.
 - **Deterministic merge** — no coordination server to attack or bribe.
   The folder is the truth; every machine independently derives the same
   answer.
+
+## Scale (v1.1 — the trade-offs, answered)
+
+The two architecture trade-offs called out at v1.0 are now handled:
+
+**Log bloat → O(1) appends + checkpoint fast-load.** Appending used to
+rewrite the entire log file every event — quadratic pain as history grows.
+Now appends are true O(1) and state folds incrementally. Each body keeps a
+`checkpoint.json` (folded state + event count + head hash). On load, if the
+checkpoint **binds** to the chain (the next event's `prevHash` points at the
+checkpoint's head), only NEW events are hashed and folded — history is
+trusted only through its hash binding. `doctor` still re-hashes the FULL
+history: fast-load is for speed, doctor is for truth. A stale or tampered
+checkpoint simply fails to bind and falls back to full verify.
+
+**Eventual-consistency latency → waiting is first-class.** Quorum arrives
+at the speed of the sync engine, so the CLI embraces it: `vote --wait 30000`
+polls until quorum or timeout, and `watch` live-prints convergence deltas
+as sync delivers them. Quorum isn't a surprise anymore — it's something you
+can watch arrive.
+
+**Cache ownership (bonus).** Only the owning body writes its `soul.json` /
+`checkpoint.json`; other machines load read-only. Two machines never fight
+over one cache file through the sync engine.
 
 ## Lineage
 

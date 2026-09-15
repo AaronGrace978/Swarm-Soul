@@ -9,8 +9,9 @@
  *   node swarm.js remember "text" [--tags a,b]
  *   node swarm.js recall <query>
  *   node swarm.js propose "question" --options "a,b,c" --quorum 2
- *   node swarm.js vote <decisionId> <choice>
- *   node swarm.js doctor
+ *   node swarm.js vote <decisionId> <choice> [--wait 30000]
+ *   node swarm.js watch [--interval 2000] [--times 10]
+ *   node swarm.js doctor          # DEEP audit: full re-hash of every chain
  *   node swarm.js demo            # spin up 3 bodies and watch quorum live
  *
  * Zero dependencies. Node 18+.
@@ -110,9 +111,9 @@ function doctor(swarm) {
     bad('bodies/ folder missing (run init)');
   }
 
-  const { chains, errors } = swarm.chains();
+  const { chains, errors } = swarm.chains({ full: true }); // DEEP AUDIT — trusts no checkpoint
   if (errors.length === 0) {
-    ok('all ' + chains.length + ' body chains verify (hash chain intact)');
+    ok('all ' + chains.length + ' body chains verify (FULL re-hash of every event)');
   } else {
     for (const e of errors) bad(e.bodyId + ': ' + e.error);
   }
@@ -263,14 +264,30 @@ function main() {
     case 'vote': {
       const id = args._[0];
       const choice = args._[1];
-      if (!id || !choice) throw new Error('usage: node swarm.js vote <decisionId> <choice>');
+      if (!id || !choice) throw new Error('usage: node swarm.js vote <decisionId> <choice> [--wait 30000]');
       swarm.vote(id, choice);
       const d = swarm.fold().state.decisions.find((x) => x.id === id);
       const votes = d ? Object.keys(d.votes).length : 0;
       console.log(swarm.bodyId + ' voted ' + choice + ' (' + votes + '/' + (d ? d.quorum : '?') + ')');
       if (d && d.status === 'decided') {
         console.log('QUORUM REACHED -> ' + d.result.winner);
+      } else if (args.wait) {
+        const timeout = typeof args.wait === 'string' ? parseInt(args.wait, 10) : 30000;
+        console.log('quorum not reached yet — waiting for other bodies (sync speed)...');
+        const dd = swarm.waitDecision(id, timeout, 1000);
+        if (dd && dd.status === 'decided') {
+          console.log('QUORUM REACHED -> ' + dd.result.winner);
+        } else {
+          console.log('still open after ' + timeout + 'ms — quorum is async; run status later or use watch');
+        }
       }
+      break;
+    }
+    case 'watch': {
+      const interval = args.interval ? parseInt(args.interval, 10) : 2000;
+      const times = args.times ? parseInt(args.times, 10) : 0;
+      console.log('watching swarm (interval ' + interval + 'ms' + (times ? ', ' + times + ' polls' : ', forever — Ctrl+C to stop') + ')...');
+      swarm.watch(interval, times || undefined);
       break;
     }
     case 'doctor':
