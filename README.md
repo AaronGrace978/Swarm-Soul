@@ -1,4 +1,7 @@
+<img width="1408" height="768" alt="image" src="https://github.com/user-attachments/assets/d0cdce97-78bc-4740-bac1-b6db57cd9cfc" />
+
 # SWARM SOUL
+
 
 > One identity, many bodies.
 
