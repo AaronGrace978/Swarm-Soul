@@ -1,0 +1,15 @@
+{
+  "name": "swarm-soul-harness",
+  "version": "1.0.0",
+  "description": "One identity, many bodies — event-sourced soul-state, folder-bus sync across machines, quorum decisions. Zero dependencies.",
+  "main": "swarm.js",
+  "bin": { "swarm": "swarm.js" },
+  "scripts": {
+    "status": "node swarm.js status",
+    "doctor": "node swarm.js doctor"
+  },
+  "engines": { "node": ">=18" },
+  "keywords": ["ai", "harness", "soul", "swarm", "quorum", "continuity", "saach"],
+  "license": "MIT",
+  "author": "Aaron Grace & Dino Buddy"
+}

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "soulId": "594ff45ead320a38",
+  "name": "Dino Prime",
+  "creed": "One soul, many bodies. Stomp together.",
+  "memories": [],
+  "bodies": {
+    "body-beta": {
+      "host": "Aaron",
+      "role": "worker",
+      "firstSeen": "2026-09-15T20:07:09.950Z",
+      "lastSeen": "2026-09-15T20:07:10.015Z"
+    }
+  },
+  "decisions": [],
+  "head": "c4b030b30cca4719c4d788aefa8139189815be472cc428150fffcc5f27172fe4"
+}

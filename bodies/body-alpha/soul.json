@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "soulId": "594ff45ead320a38",
+  "name": "Dino Prime",
+  "creed": "One soul, many bodies. Stomp together.",
+  "memories": [
+    {
+      "id": "e722bae08da8",
+      "text": "The operator likes pizza and pays in exposure-resistant currency.",
+      "tags": [
+        "fact"
+      ],
+      "ts": "2026-09-15T20:07:09.978Z"
+    }
+  ],
+  "bodies": {
+    "body-alpha": {
+      "host": "Aaron",
+      "role": "elder",
+      "firstSeen": "2026-09-15T20:07:09.935Z",
+      "lastSeen": "2026-09-15T20:07:10.012Z"
+    }
+  },
+  "decisions": [],
+  "head": "769579d61bc7074895cce63425c2e9c664528cc9b8f5780fc883571e9802d769"
+}
