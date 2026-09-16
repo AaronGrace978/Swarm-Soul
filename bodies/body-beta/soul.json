@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "soulId": "42e7e6c803a74373",
   "name": "Dino Prime",
   "creed": "One soul, many bodies. Stomp together.",
@@ -9,9 +9,9 @@
       "host": "Aaron",
       "role": "worker",
       "firstSeen": "2026-09-15T20:47:52.631Z",
-      "lastSeen": "2026-09-15T20:47:52.682Z"
+      "lastSeen": "2026-09-16T07:06:10.371Z"
     }
   },
   "decisions": [],
-  "head": "58658494c73a6aa0fabab655840f6fbe318b5c206f9069b592b5d43bc388b4e3"
+  "head": "419a84ec9d36d982091a2b093d073e80780b8d5124b338278478bf62aa0b22ae"
 }

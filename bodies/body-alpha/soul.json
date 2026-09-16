@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "soulId": "42e7e6c803a74373",
   "name": "Dino Prime",
   "creed": "One soul, many bodies. Stomp together.",
@@ -10,7 +10,7 @@
       "tags": [
         "fact"
       ],
-      "ts": "2026-09-15T20:47:52.650Z"
+      "ts": "2026-09-16T07:06:10.363Z"
     }
   ],
   "bodies": {
@@ -18,9 +18,9 @@
       "host": "Aaron",
       "role": "elder",
       "firstSeen": "2026-09-15T20:47:52.618Z",
-      "lastSeen": "2026-09-15T20:47:52.680Z"
+      "lastSeen": "2026-09-16T07:06:10.371Z"
     }
   },
   "decisions": [],
-  "head": "bda7788a76c1bb4ef171c8f75249a364a89cdd5839cd40a931b729eead54426c"
+  "head": "15ad66233b1fbbcece84b1ee06f978d727d75324a842509283ec35f115ada5cd"
 }

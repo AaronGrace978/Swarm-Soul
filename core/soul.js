@@ -35,7 +35,12 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const SOUL_VERSION = 1;
+// v2: 'remember' folds idempotently (content-addressed id dedupes).
+// Version bump invalidates all v1 checkpoints — any cache folded with
+// the old duplicate-accumulating semantics is rejected and re-folded
+// from the log. The log is the truth; caches must never outlive a
+// change in fold semantics.
+const SOUL_VERSION = 2;
 
 // ---------------------------------------------------------------- hashing
 
@@ -109,12 +114,22 @@ function foldInto(state, events) {
         break;
       case 'remember': {
         const id = ev.payload.id || sha256(ev.payload.text).slice(0, 12);
-        state.memories.push({
+        const memory = {
           id: id,
           text: ev.payload.text,
           tags: ev.payload.tags || [],
           ts: ev.t,
-        });
+        };
+        // Idempotent fold: the id is content-addressed (hash of the text),
+        // so re-appending the same memory (demo re-runs, two bodies
+        // remembering the same thing, sync replays) must yield ONE
+        // memory, not duplicates. Replace in place — latest ts wins.
+        const existingIdx = state.memories.findIndex((m) => m.id === id);
+        if (existingIdx === -1) {
+          state.memories.push(memory);
+        } else {
+          state.memories[existingIdx] = memory;
+        }
         state.head = ev.hash;
         break;
       }

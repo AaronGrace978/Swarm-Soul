@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "soulId": "42e7e6c803a74373",
   "name": "Dino Prime",
   "creed": "One soul, many bodies. Stomp together.",
@@ -9,7 +9,7 @@
       "host": "Aaron",
       "role": "worker",
       "firstSeen": "2026-09-15T20:47:52.647Z",
-      "lastSeen": "2026-09-15T20:47:52.685Z"
+      "lastSeen": "2026-09-16T07:06:10.372Z"
     }
   },
   "decisions": [
@@ -26,7 +26,35 @@
       "status": "open",
       "proposedBy": "body-gamma",
       "ts": "2026-09-15T20:47:52.663Z"
+    },
+    {
+      "id": "d88f8b2f204a",
+      "question": "Which body leads the next mission?",
+      "options": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "votes": {},
+      "quorum": 2,
+      "status": "open",
+      "proposedBy": "body-gamma",
+      "ts": "2026-09-16T07:05:18.449Z"
+    },
+    {
+      "id": "1c2bf974871e",
+      "question": "Which body leads the next mission?",
+      "options": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "votes": {},
+      "quorum": 2,
+      "status": "open",
+      "proposedBy": "body-gamma",
+      "ts": "2026-09-16T07:06:10.366Z"
     }
   ],
-  "head": "d3c7d2e226fd7296afd7c9eb6d60c66894fdb0baf52ea563cdf8a8b607ddded8"
+  "head": "f894acd55e7d78ad1418784b4fbfa974c54e7e65dd7de50f8bbf6face355bb01"
 }

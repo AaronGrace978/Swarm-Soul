@@ -27,7 +27,7 @@ truth.
 
 **The bus is the folder.** No servers, no ports, no protocols to configure.
 Every body keeps its own append-only event log at
-`data/bodies/<bodyId>/events.jsonl`. Put the harness folder in OneDrive (it
+`bodies/<bodyId>/events.jsonl`. Put the harness folder in OneDrive (it
 already is) and sync carries every body's log to every machine. That's the
 nervous system.
 
@@ -96,7 +96,7 @@ SWARM_BODY_ID=body-laptop node swarm.js heartbeat
 | `genesis` | the soul is born — name, creed, soulId |
 | `body-online` | a body joins the swarm (inherits the soulId) |
 | `body-heartbeat` | a body proves it's alive |
-| `remember` | write to shared memory |
+| `remember` | write to shared memory (idempotent — same text folds to ONE memory, latest ts wins) |
 | `forget` | remove a memory |
 | `decision-proposed` | a body asks the swarm a question |
 | `decision-vote` | a body votes; quorum reached = decided |
