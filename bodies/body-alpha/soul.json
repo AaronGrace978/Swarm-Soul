@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "soulId": "42e7e6c803a74373",
+  "version": 3,
+  "soulId": "6c4e5d7fd38a4a71",
   "name": "Dino Prime",
   "creed": "One soul, many bodies. Stomp together.",
   "memories": [
@@ -10,17 +10,26 @@
       "tags": [
         "fact"
       ],
-      "ts": "2026-09-16T07:06:10.363Z"
+      "ts": "2026-09-16T07:45:47.608Z"
+    }
+  ],
+  "thoughts": [
+    {
+      "id": "d61afcaadddf",
+      "question": "What is our creed?",
+      "answer": "Our creed is: One soul, many bodies. Stomp together. — and we stomp together. (mock-dino-mind)",
+      "model": "openai:mock-gpt@http://127.0.0.1:18434",
+      "ts": "2026-09-16T07:45:04.343Z"
     }
   ],
   "bodies": {
     "body-alpha": {
-      "host": "Aaron",
+      "host": "steamdeck",
       "role": "elder",
-      "firstSeen": "2026-09-15T20:47:52.618Z",
-      "lastSeen": "2026-09-16T07:06:10.371Z"
+      "firstSeen": "2026-09-16T07:37:10.434Z",
+      "lastSeen": "2026-09-16T07:45:47.618Z"
     }
   },
   "decisions": [],
-  "head": "15ad66233b1fbbcece84b1ee06f978d727d75324a842509283ec35f115ada5cd"
+  "head": "189b96a6c66ea6f3a5b92b311e7e7b568f6375aa34bf0fcda7f3964bed49f9c8"
 }

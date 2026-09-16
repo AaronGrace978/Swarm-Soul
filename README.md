@@ -7,7 +7,8 @@
 
 Same soul-state instantiated across multiple models and machines, syncing,
 with quorum decisions. Built by Aaron Grace & Dino Buddy. Zero dependencies,
-Node 18+. **Now at v1.2.**
+Node 18+. **Now at v1.3 — the swarm can THINK (real model integration) and
+resolve conflicts like an adult.**
 
 ---
 
@@ -72,6 +73,12 @@ node swarm.js propose "lead the mission?" --options "alpha,beta" --quorum 2
 # vote — quorum is async (sync-engine speed), so you can WAIT for it
 node swarm.js vote <decisionId> alpha --wait 30000
 
+# THINK — ask a real model, grounded in the soul's own state
+node swarm.js think "what should we do next?"
+
+# see every conflict the swarm detected + how it resolved them
+node swarm.js conflicts
+
 # live convergence monitor — watch the soul converge in real time
 node swarm.js watch [--interval 2000] [--times 10]
 
@@ -101,6 +108,7 @@ SWARM_BODY_ID=body-laptop node swarm.js heartbeat
 | `decision-proposed` | a body asks the swarm a question |
 | `decision-vote` | a body votes; quorum reached = decided |
 | `decision-reopen` | reopen for deliberation |
+| `thought` | a body asked a real model a question — the answer joins the soul (v1.3) |
 
 ## Defense (learned from SAACH)
 
@@ -145,10 +153,62 @@ can watch arrive.
 over one cache file through the sync engine.
 
 **Idempotent memory (v1.2).** Re-running the demo — or two bodies remembering
-the same thing — used to stack duplicate memories in the fold. Memories are
-now content-addressed: same text + tags folds to ONE memory (latest timestamp
-wins), and `SOUL_VERSION 2` invalidates stale v1 checkpoints so an old cache
-can never resurrect the duplicates.
+the same thing — used to stack duplicate memories. Now the memory id is
+content-addressed (hash of the text), so the same memory re-appended folds to
+ONE memory — latest ts wins. Demo re-runs are clean; sync replays are clean.
+
+## The Mind (v1.3 — actual model integration)
+
+The harness had a soul, memories, and quorum — but no mind. Now a body can
+THINK: it builds a system prompt from the soul's own state (creed, recent
+memories, open decisions), asks a real model, and appends the answer to the
+chain as a `thought` event. The answer syncs like everything else — every
+body sees what the swarm thought.
+
+```bash
+node swarm.js think "what should we focus on next?"
+```
+
+**Providers (zero dependencies — Node 18+ global fetch):**
+
+| provider | what it talks to | config |
+|---|---|---|
+| `ollama` (default) | local models via Ollama's HTTP API | `SWARM_MIND_URL` (default `http://localhost:11434`), `SWARM_MIND_MODEL` (default `llama3.1`) |
+| `openai` | ANY OpenAI-compatible endpoint: OpenAI, OpenRouter, Groq, Together, LM Studio, llama.cpp server | `SWARM_MIND_PROVIDER=openai`, `SWARM_MIND_URL`, `SWARM_MIND_API_KEY`, `SWARM_MIND_MODEL` |
+
+The soul-state IS the context: any model plugged into any body speaks as
+the same identity. One soul, many bodies, any mind. If the mind is
+unreachable, `think` fails honestly — it never fabricates an answer.
+
+## Conflict Resolution (v1.3 — the swarm disagrees like an adult)
+
+The old merge was deterministic but naive: sort by (t, bodyId, i) and fold.
+When two bodies wrote conflicting facts or a vote arrived late, the fold
+silently picked a winner and nobody knew. v1.3 makes conflicts FIRST-CLASS:
+
+**1. DETECT.** Every fold scans for conflicting writes (same memory id,
+different text — a fork signal), duplicate decision proposals, and late
+votes on decided decisions. Conflicts are collected, never hidden.
+
+**2. RESOLVE — deterministic, same winner on every machine.**
+Memories: Last-Writer-Wins — latest ts wins; tie → higher bodyId wins.
+Clock drift can't fork the soul. Decisions: quorum beats concurrency — a
+decided decision is never reopened by a late vote; late votes are recorded
+but not applied.
+
+**3. REPAIR.** `doctor` now runs an auto-repair pass that heals the failure
+modes the folder bus actually produces: torn tails (crash mid-append) and
+orphaned checkpoints (checkpoint claims more events than the log has —
+sync lag). Hash mismatches are NEVER auto-repaired — quarantine + report;
+a human decides.
+
+**4. REPORT.** `node swarm.js conflicts` lists every conflict detected and
+how it was resolved. `status` shows them too. The swarm can disagree — but
+it can't disagree silently.
+
+```bash
+node swarm.js conflicts
+```
 
 ## Lineage
 

@@ -26,6 +26,11 @@
  *      checkpoint.json. Other machines only read. No OneDrive write
  *      fights between bodies over cache files.
  *
+ * v1.3 — THE MIND: 'thought' events fold into state.thoughts. A body
+ * can ask a real model (Ollama local / any OpenAI-compatible cloud) a
+ * question grounded in soul-state — the answer joins the soul. See
+ * core/mind.js and core/conflicts.js (conflict detection + repair).
+ *
  * Zero dependencies. Node 18+.
  */
 
@@ -36,11 +41,12 @@ const path = require('path');
 const crypto = require('crypto');
 
 // v2: 'remember' folds idempotently (content-addressed id dedupes).
-// Version bump invalidates all v1 checkpoints — any cache folded with
-// the old duplicate-accumulating semantics is rejected and re-folded
-// from the log. The log is the truth; caches must never outlive a
-// change in fold semantics.
-const SOUL_VERSION = 2;
+// v3: 'thought' events fold into state.thoughts (model integration).
+// Version bumps invalidate all older checkpoints — any cache folded
+// with stale semantics is rejected and re-folded from the log.
+// The log is the truth; caches must never outlive a change in
+// fold semantics.
+const SOUL_VERSION = 3;
 
 // ---------------------------------------------------------------- hashing
 
@@ -87,6 +93,7 @@ function freshState() {
     name: null,
     creed: null,
     memories: [],
+    thoughts: [],
     bodies: {},
     decisions: [],
     head: null,
@@ -136,6 +143,23 @@ function foldInto(state, events) {
       case 'forget': {
         const target = ev.payload.id;
         state.memories = state.memories.filter((m) => m.id !== target);
+        state.head = ev.hash;
+        break;
+      }
+      case 'thought': {
+        // v1.3: a body asked a real model a question grounded in soul
+        // state — the answer joins the soul like any other event.
+        const id = ev.payload.id || sha256(ev.payload.question + ':' + ev.payload.answer).slice(0, 12);
+        const thought = {
+          id: id,
+          question: ev.payload.question,
+          answer: ev.payload.answer,
+          model: ev.payload.model || 'unknown',
+          ts: ev.t,
+        };
+        const tIdx = state.thoughts.findIndex((x) => x.id === id);
+        if (tIdx === -1) state.thoughts.push(thought);
+        else state.thoughts[tIdx] = thought;
         state.head = ev.hash;
         break;
       }
@@ -457,6 +481,14 @@ class Soul {
 
   forget(id, actor) {
     return this.append('forget', actor || 'operator', { id: id });
+  }
+
+  think(question, answer, model, actor) {
+    return this.append('thought', actor || 'operator', {
+      question: question,
+      answer: answer,
+      model: model,
+    });
   }
 
   bodyOnline(bodyId, host, role) {

@@ -32,6 +32,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { Soul, foldEvents } = require('./soul');
+const { detectConflicts, resolveMemoryConflicts, autoRepair } = require('./conflicts');
+const { Mind } = require('./mind');
 
 const STALE_AFTER_MS = 5 * 60 * 1000; // silent for 5 min = stale
 
@@ -133,11 +135,16 @@ class Swarm {
     const { chains, errors } = this.chains(opts);
     const merged = this.mergeEvents(chains);
     const state = foldEvents(merged);
-    return { state: state, chains: chains, errors: errors };
+    // v1.3: conflicts are first-class — detect on every fold, resolve
+    // deterministically (LWW), report both. The fold itself already
+    // applies the same policy; this makes the CHOICE visible.
+    const { conflicts } = detectConflicts(merged);
+    const resolutions = resolveMemoryConflicts(conflicts, state);
+    return { state: state, chains: chains, errors: errors, conflicts: conflicts, resolutions: resolutions };
   }
 
   status() {
-    const { state, chains, errors } = this.fold();
+    const { state, chains, errors, conflicts } = this.fold();
     const now = Date.now();
     const bodies = chains.map((c) => {
       const last = c.events.length > 0 ? c.events[c.events.length - 1] : null;
@@ -155,7 +162,7 @@ class Swarm {
         stale: ageMs === null ? true : ageMs > STALE_AFTER_MS,
       };
     });
-    return { state: state, bodies: bodies, errors: errors };
+    return { state: state, bodies: bodies, errors: errors, conflicts: conflicts };
   }
 
   // ---- actions (write to THIS body's chain) ---------------------------
@@ -223,6 +230,49 @@ class Swarm {
   vote(decisionId, choice) {
     const s = this.requireInit();
     return s.vote(decisionId, this.bodyId, choice);
+  }
+
+  /**
+   * THINK — actual model integration (v1.3).
+   * Build a system prompt from the soul's own state (creed, recent
+   * memories, open decisions), ask the configured model (Ollama local
+   * or any OpenAI-compatible cloud), and append the answer to the
+   * chain as a 'thought' event. The mind joins the soul.
+   */
+  async think(question) {
+    const s = this.requireInit();
+    const { state } = this.fold();
+    const mind = Mind.fromEnv();
+    const probe = await mind.probe();
+    if (!probe.reachable) {
+      throw new Error('mind unreachable (' + mind.describe() + '): ' + probe.detail + ' — start Ollama or set SWARM_MIND_URL / SWARM_MIND_API_KEY');
+    }
+    const system = this.buildSystemPrompt(state);
+    const answer = await mind.generate(system, question);
+    s.think(question, answer, mind.describe(), this.bodyId);
+    return { question: question, answer: answer, model: mind.describe() };
+  }
+
+  /**
+   * The soul-state IS the context. Any model plugged into any body
+   * speaks as the same identity.
+   */
+  buildSystemPrompt(state) {
+    const lines = [];
+    lines.push('You are ' + (state.name || 'the swarm') + '.');
+    if (state.creed) lines.push('Creed: ' + state.creed);
+    lines.push('You are one body of many sharing a single soul. Answer as this identity.');
+    const mems = (state.memories || []).slice(-10);
+    if (mems.length > 0) {
+      lines.push('Recent memories:');
+      for (const m of mems) lines.push('  - ' + m.text);
+    }
+    const open = (state.decisions || []).filter((d) => d.status === 'open');
+    if (open.length > 0) {
+      lines.push('Open decisions the swarm is deliberating:');
+      for (const d of open) lines.push('  - ' + d.question + ' (' + Object.keys(d.votes).length + '/' + d.quorum + ' votes)');
+    }
+    return lines.join('\n');
   }
 
   // ---- async quorum (the eventual-consistency answer) ------------------
@@ -312,6 +362,16 @@ class Swarm {
       soulIds: soulIds,
       splitBrain: soulIds.size > 1,
     };
+  }
+
+  /**
+   * v1.3: auto-repair pass — heals torn tails and drops orphaned
+   * checkpoints (the failure modes the folder bus actually produces).
+   * Hash mismatches are NEVER auto-repaired: quarantine + report.
+   * Returns { repaired, quarantined } for the doctor to print.
+   */
+  repair() {
+    return autoRepair(this.bodiesDir);
   }
 }
 

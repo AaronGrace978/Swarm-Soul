@@ -1,6 +1,6 @@
 {
   "name": "swarm-soul-harness",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "One identity, many bodies — event-sourced soul-state, folder-bus sync across machines, quorum decisions. Zero dependencies.",
   "main": "swarm.js",
   "bin": { "swarm": "swarm.js" },

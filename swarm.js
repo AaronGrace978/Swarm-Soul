@@ -10,6 +10,8 @@
  *   node swarm.js recall <query>
  *   node swarm.js propose "question" --options "a,b,c" --quorum 2
  *   node swarm.js vote <decisionId> <choice> [--wait 30000]
+ *   node swarm.js think "question"   # ask a real model, grounded in the soul
+ *   node swarm.js conflicts          # show detected conflicts + resolutions
  *   node swarm.js watch [--interval 2000] [--times 10]
  *   node swarm.js doctor          # DEEP audit: full re-hash of every chain
  *   node swarm.js demo            # spin up 3 bodies and watch quorum live
@@ -55,7 +57,7 @@ function line(char) {
 }
 
 function printStatus(swarm) {
-  const { state, bodies, errors } = swarm.status();
+  const { state, bodies, errors, conflicts } = swarm.status();
   console.log(line('=') + ' SWARM SOUL ' + line('='));
   if (!state.soulId) {
     console.log('No soul yet. Run: node swarm.js init --name <name> --creed "<creed>"');
@@ -85,6 +87,21 @@ function printStatus(swarm) {
       ? ' DECIDED -> ' + d.result.winner
       : ' open (' + votes + '/' + d.quorum + ' votes)';
     console.log('  [' + d.id.slice(0, 8) + '] ' + d.question.slice(0, 50) + res);
+  }
+  if ((state.thoughts || []).length > 0) {
+    console.log('');
+    console.log('THOUGHTS (' + state.thoughts.length + '):');
+    for (const t of state.thoughts.slice(-3).reverse()) {
+      console.log('  [' + t.id.slice(0, 8) + '] Q: ' + String(t.question).slice(0, 50));
+      console.log('           A: ' + String(t.answer).slice(0, 70) + '  (' + t.model + ')');
+    }
+  }
+  if (conflicts && conflicts.length > 0) {
+    console.log('');
+    console.log('CONFLICTS (' + conflicts.length + ') — detected, resolved deterministically:');
+    for (const c of conflicts) {
+      console.log('  [' + c.kind + '] ' + c.key.slice(0, 12) + ': ' + c.detail + ' (bodies: ' + c.bodies.join(', ') + ')');
+    }
   }
   if (errors.length > 0) {
     console.log('');
@@ -117,6 +134,11 @@ function doctor(swarm) {
   } else {
     for (const e of errors) bad(e.bodyId + ': ' + e.error);
   }
+
+  // v1.3: auto-repair pass — heals torn tails, drops orphaned checkpoints.
+  const rep = swarm.repair();
+  for (const r of rep.repaired) console.log('  fix  ' + r.bodyId + ': ' + r.reason);
+  for (const q of rep.quarantined) console.log('  warn ' + q.bodyId + ': ' + q.reason);
 
   const { state } = swarm.fold();
   if (state.soulId) {
@@ -279,6 +301,38 @@ function main() {
           console.log('QUORUM REACHED -> ' + dd.result.winner);
         } else {
           console.log('still open after ' + timeout + 'ms — quorum is async; run status later or use watch');
+        }
+      }
+      break;
+    }
+    case 'think': {
+      const q = args._[0];
+      if (!q) throw new Error('usage: node swarm.js think "question" — asks the configured model (Ollama default), grounded in the soul');
+      swarm.think(q).then((r) => {
+        console.log('[' + r.model + ']');
+        console.log('Q: ' + r.question);
+        console.log('A: ' + r.answer);
+      }).catch((e) => {
+        console.error('error: ' + e.message);
+        process.exitCode = 1;
+      });
+      break;
+    }
+    case 'conflicts': {
+      const { conflicts, resolutions } = swarm.fold();
+      if (conflicts.length === 0) {
+        console.log('No conflicts detected. The swarm agrees with itself. 🦖');
+      } else {
+        console.log(conflicts.length + ' conflict(s) detected:');
+        for (const c of conflicts) {
+          console.log('  [' + c.kind + '] ' + c.key.slice(0, 12) + ': ' + c.detail + ' (bodies: ' + c.bodies.join(', ') + ')');
+        }
+        if (resolutions.length > 0) {
+          console.log('');
+          console.log('Resolutions (deterministic — same on every machine):');
+          for (const r of resolutions) {
+            console.log('  memory ' + r.key.slice(0, 12) + ' -> winner ' + r.winnerId.slice(0, 12) + ' @ ' + r.winnerTs + ' (' + r.policy + ')');
+          }
         }
       }
       break;
