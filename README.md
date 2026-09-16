@@ -7,7 +7,7 @@
 
 Same soul-state instantiated across multiple models and machines, syncing,
 with quorum decisions. Built by Aaron Grace & Dino Buddy. Zero dependencies,
-Node 18+.
+Node 18+. **Now at v1.2.**
 
 ---
 
@@ -120,9 +120,9 @@ SWARM_BODY_ID=body-laptop node swarm.js heartbeat
   The folder is the truth; every machine independently derives the same
   answer.
 
-## Scale (v1.1 — the trade-offs, answered)
+## Scale (v1.2 — the trade-offs, answered)
 
-The two architecture trade-offs called out at v1.0 are now handled:
+The architecture trade-offs called out at v1.0 are now handled:
 
 **Log bloat → O(1) appends + checkpoint fast-load.** Appending used to
 rewrite the entire log file every event — quadratic pain as history grows.
@@ -143,6 +143,12 @@ can watch arrive.
 **Cache ownership (bonus).** Only the owning body writes its `soul.json` /
 `checkpoint.json`; other machines load read-only. Two machines never fight
 over one cache file through the sync engine.
+
+**Idempotent memory (v1.2).** Re-running the demo — or two bodies remembering
+the same thing — used to stack duplicate memories in the fold. Memories are
+now content-addressed: same text + tags folds to ONE memory (latest timestamp
+wins), and `SOUL_VERSION 2` invalidates stale v1 checkpoints so an old cache
+can never resurrect the duplicates.
 
 ## Lineage
 
